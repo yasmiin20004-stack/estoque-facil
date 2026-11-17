@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque Fácil</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#eef6ff;padding:12px}
+.top{background:#0b6e4f;color:#fff;padding:18px;border-radius:14px;text-align:center}
+.top h1{margin:0;font-size:26px}.top p{margin:4px 0 0;opacity:.9}
+.card{background:#fff;padding:14px;border-radius:14px;margin-top:12px;box-shadow:0 2px 8px #0001}
+input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:10px;font-size:16px}
+button{width:100%;padding:13px;border:0;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer}
+.btn-verde{background:#0b9d6b;color:#fff}
+.btn-azul{background:#0b6ed6;color:#fff;margin-top:8px}
+.btn-peq{width:auto;padding:8px 10px;font-size:13px;margin:3px}
+.editar{background:#ffb020}.excluir{background:#e63946;color:#fff}.vender{background:#0b6ed6;color:#fff}
+.item{border:1px solid #eee;border-radius:12px;padding:10px;margin-top:10px}
+.baixo{color:#e63946;font-weight:bold}
+.ok{color:#0b6e4f;font-weight:bold}
+.total{background:#fff3cd;padding:12px;border-radius:12px;margin-top:12px;text-align:center;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="top"><h1>📦 Estoque Fácil</h1><p>Loja fictícia - Grupo 4</p></div>
+<div class="card">
+<h3>Cadastrar produto</h3>
+<input id="nome" placeholder="Nome do produto">
+<input id="preco" type="number" step="0.01" placeholder="Preço R$ Ex: 20">
+<input id="qtd" type="number" placeholder="Quantidade Ex: 10">
+<button class="btn-verde" onclick="salvar()">+ ADICIONAR PRODUTO</button>
+<p id="msg"></p>
+</div>
+<div class="card">
+<h3>🔍 Pesquisar</h3>
+<input id="busca" placeholder="Digite o nome..." oninput="mostrar()">
+</div>
+<div class="card">
+<h3>🛒 Simular venda</h3>
+<select id="selProduto"></select>
+<input id="qtdVenda" type="number" placeholder="Quantidade para vender" value="1">
+<button class="btn-azul" onclick="vender()">VENDER</button>
+<p id="msgVenda"></p>
+</div>
+<div class="total" id="totalVendas">Total de vendas: R$ 0,00</div>
+<div class="card">
+<h3>Produtos em estoque</h3>
+<div id="lista"></div>
+</div>
+<script>
+let produtos = JSON.parse(localStorage.getItem('produtos')||'null');
+let total = parseFloat(localStorage.getItem('totalVendas')||'0');
+let editando = -1;
+if(!produtos){
+produtos=[{nome:'Caderno',preco:20,qtd:10},{nome:'Caneta',preco:5,qtd:3}];
+salvarDados();
+}
+function salvarDados(){
+localStorage.setItem('produtos',JSON.stringify(produtos));
+localStorage.setItem('totalVendas',total);
+}
+function salvar(){
+let n=document.getElementById('nome').value.trim();
+let p=parseFloat(document.getElementById('preco').value);
+let q=parseInt(document.getElementById('qtd').value);
+if(!n||isNaN(p)||isNaN(q)){document.getElementById('msg').innerText='Preencha nome, preço e quantidade!';return;}
+if(editando>=0){produtos[editando]={nome:n,preco:p,qtd:q};editando=-1;document.getElementById('msg').innerText='Produto editado!';}
+else{produtos.push({nome:n,preco:p,qtd:q});document.getElementById('msg').innerText='Produto adicionado!';}
+document.getElementById('nome').value='';document.getElementById('preco').value='';document.getElementById('qtd').value='';
+salvarDados();mostrar();
+}
+function mostrar(){
+let busca=document.getElementById('busca').value.toLowerCase();
+let lista=document.getElementById('lista');
+let sel=document.getElementById('selProduto');
+lista.innerHTML='';sel.innerHTML='';
+document.getElementById('totalVendas').innerText='Total de vendas: R$ '+total.toFixed(2).replace('.',',');
+produtos.forEach((pr,i)=>{
+sel.innerHTML+='<option value="'+i+'">'+pr.nome+' - Estoque: '+pr.qtd+'</option>';
+if(busca && !pr.nome.toLowerCase().includes(busca)) return;
+let aviso = pr.qtd<5 ? '<span class="baixo">⚠️ ESTOQUE BAIXO!</span>' : '<span class="ok">✅ Em estoque</span>';
+lista.innerHTML+='<div class="item"><b>'+pr.nome+'</b><br>Preço: R$ '+pr.preco.toFixed(2).replace('.',',')+' | Qtd: '+pr.qtd+'<br>'+aviso+'<br><button class="btn-peq editar" onclick="editar('+i+')">Editar</button><button class="btn-peq excluir" onclick="excluir('+i+')">Excluir</button></div>';
+});
+if(lista.innerHTML=='') lista.innerHTML='<p>Nenhum produto encontrado.</p>';
+}
+function editar(i){
+let pr=produtos[i];
+document.getElementById('nome').value=pr.nome;
+document.getElementById('preco').value=pr.preco;
+document.getElementById('qtd').value=pr.qtd;
+editando=i;document.getElementById('msg').innerText='Editando '+pr.nome+' - toque em ADICIONAR para salvar.';
+window.scrollTo(0,0);
+}
+function excluir(i){
+if(confirm('Excluir '+produtos[i].nome+'?')){produtos.splice(i,1);salvarDados();mostrar();}
+}
+function vender(){
+let i=parseInt(document.getElementById('selProduto').value);
+let q=parseInt(document.getElementById('qtdVenda').value);
+if(isNaN(q)||q<=0){document.getElementById('msgVenda').innerText='Digite uma quantidade válida!';return;}
+let pr=produtos[i];
+if(q>pr.qtd){document.getElementById('msgVenda').innerText='❌ Não tem estoque suficiente! Só tem '+pr.qtd;return;}
+pr.qtd-=q;
+let valor=q*pr.preco;
+total+=valor;
+salvarDados();mostrar();
+document.getElementById('msgVenda').innerText='✅ Venda feita! '+q+' x '+pr.nome+' = R$ '+valor.toFixed(2).replace('.',',')+'. Estoque agora: '+pr.qtd;
+}
+mostrar();
+</script>
+</body>
+</html>
