@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque Fácil</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#071a33;color:#fff;padding:0 0 90px}
+.topo{padding:18px 15px 5px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:26px;font-weight:bold}.logo span{color:#3ec6e8}.sub{font-size:13px;color:#cbd5e1}
+.saudacao{padding:5px 15px}.saudacao b{font-size:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 15px}
+.card{background:#123a63;border-radius:14px;padding:12px}.card b{font-size:16px}.card h2{margin:5px 0 0;font-size:22px}
+.hist{margin:0 15px;background:#123a63;border-radius:14px;padding:12px}
+.botoes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 15px}
+.btn{border:0;border-radius:12px;padding:14px 5px;color:#fff;font-weight:bold;font-size:15px}
+.azul{background:#2563eb}.verde{background:#059669}.escuro{background:#123a63}
+.resumo{padding:0 15px}.resumo2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.lista{margin:15px;background:#123a63;border-radius:14px;padding:12px}
+.item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #ffffff22}
+.pill{background:#065f46;padding:5px 10px;border-radius:20px;font-size:13px;font-weight:bold}
+input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:0;font-size:16px}
+.menu{position:fixed;bottom:0;left:0;right:0;background:#0b4a7a;display:flex;justify-content:space-around;padding:12px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="topo"><div class="logo">📦 Estoque <span>Fácil</span><div class="sub">Gestão de Estoque e Vendas</div></div><div>🔔</div></div>
+<div class="saudacao"><b>Olá, usuário!</b><br><span style="color:#cbd5e1">Acompanhe aqui o resumo do seu estoque e das suas vendas.</span></div>
+<div class="grid">
+<div class="card">📦 <b>Produtos em Estoque</b><h2 id="totalQtd">185</h2></div>
+<div class="card">🛒 <b>Vendas do Dia</b><h2>24</h2></div>
+<div class="card">💰 <b>Faturamento</b><h2>R$ 1.542,90</h2></div>
+<div class="card">🏷️ <b>Preços</b><br>Gerenciar preços</div>
+</div>
+<div class="hist">🕐 <b>Histórico</b><br><span style="color:#cbd5e1">Consulte vendas e movimentações de estoque</span></div>
+<div class="botoes">
+<button class="btn azul" onclick="mostrar('cad')">+<br>Adicionar Produto</button>
+<button class="btn verde" onclick="mostrar('venda')">🛒<br>Registrar Venda</button>
+<button class="btn escuro" onclick="alert('Relatórios em breve!')">📊<br>Relatórios</button>
+</div>
+<div id="cad" style="display:none;background:#fff;color:#000;border-radius:14px;margin:0 15px;padding:12px">
+<h3 style="margin:0">Adicionar Produto</h3>
+<input id="nome" placeholder="Nome do produto">
+<input id="preco" type="number" placeholder="Preço R$">
+<input id="qtd" type="number" placeholder="Quantidade">
+<button class="btn azul" style="width:100%" onclick="salvar()">Salvar Produto</button>
+</div>
+<div id="venda" style="display:none;background:#fff;color:#000;border-radius:14px;margin:0 15px;padding:12px">
+<h3 style="margin:0">Registrar Venda</h3>
+<select id="sel"></select>
+<input id="qtdVenda" type="number" value="1">
+<button class="btn verde" style="width:100%" onclick="vender()">Vender</button>
+<p><b>Total de vendas:</b> <span id="totalVendas">R$ 0,00</span></p>
+</div>
+<div class="resumo" style="margin-top:12px"><b>📊 Resumo</b>
+<div class="resumo2"><div class="card">Vendas (R$)<h2>R$ 5.732,40</h2>📈 +12,6%</div><div class="card">Produtos em Estoque<h2 id="totalQtd2">185 itens</h2>Em estoque: 82%<br>Estoque baixo: 18%</div></div>
+</div>
+<div class="lista"><b>📦 Principais Produtos</b><div id="lista"></div></div>
+<div class="menu"><div>🏠<br>Início</div><div>📦<br>Produtos</div><div>🛒<br>Vendas</div><div>📊<br>Relatórios</div><div>👤<br>Perfil</div></div>
+<script>
+let produtos=JSON.parse(localStorage.getItem('produtos')||'[]');
+let total=parseFloat(localStorage.getItem('total')||'0');
+if(produtos.length===0){produtos=[{nome:'Refrigerante 350 ml',preco:5,qtd:48},{nome:'Batata Chips 100 g',preco:8,qtd:32},{nome:'Chocolate 90 g',preco:6,qtd:15},{nome:'Caderno',preco:20,qtd:10}];salvarDados();}
+function salvarDados(){localStorage.setItem('produtos',JSON.stringify(produtos));localStorage.setItem('total',total);}
+function mostrar(id){document.getElementById('cad').style.display=id==='cad'?'block':'none';document.getElementById('venda').style.display=id==='venda'?'block':'none';}
+function salvar(){let n=document.getElementById('nome').value;let p=parseFloat(document.getElementById('preco').value);let q=parseInt(document.getElementById('qtd').value);if(!n||isNaN(p)||isNaN(q))return alert('Preencha tudo!');produtos.push({nome:n,preco:p,qtd:q});salvarDados();listar();alert('Produto salvo!');}
+function listar(){let div=document.getElementById('lista');div.innerHTML='';let sel=document.getElementById('sel');sel.innerHTML='';let soma=0;produtos.forEach((pr,i)=>{soma+=pr.qtd;sel.innerHTML+=`<option value="${i}">${pr.nome} - ${pr.qtd} un.</option>`;div.innerHTML+=`<div class="item"><span>📦 ${pr.nome}</span><span class="pill">Qtd: ${pr.qtd}</span></div>`;});document.getElementById('totalQtd').innerText=soma;document.getElementById('totalQtd2').innerText=soma+' itens';document.getElementById('totalVendas').innerText='R$ '+total.toFixed(2);}
+function vender(){let i=document.getElementById('sel').value;let q=parseInt(document.getElementById('qtdVenda').value);if(q>produtos[i].qtd)return alert('Não tem estoque suficiente!');produtos[i].qtd-=q;let v=q*produtos[i].preco;total+=v;salvarDados();listar();alert('Venda feita! R$ '+v.toFixed(2));}
+listar();
+</script>
+</body>
+</html>
