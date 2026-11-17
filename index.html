@@ -4,51 +4,48 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estoque Fácil</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#2563EB">
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f2f2f2;padding:15px}
-h1{text-align:center;color:#1a7a4a}
-.card{background:#fff;padding:15px;border-radius:12px;margin-bottom:15px;box-shadow:0 2px 8px #0001}
-input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;font-size:16px}
-button{width:100%;padding:13px;background:#1a7a4a;color:#fff;border:0;border-radius:8px;font-size:16px;font-weight:bold}
-.item{background:#fff;padding:12px;border-radius:10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.item b{font-size:17px}
-.baixo{color:red;font-weight:bold}
-.del{background:#ff4444;padding:8px 12px;width:auto}
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#EFF6FF;padding:16px;color:#1E3A8A}
+header{text-align:center;background:#2563EB;color:white;padding:22px;border-radius:16px}
+.card{background:white;padding:16px;border-radius:16px;margin-top:14px}
+button{background:#16A34A;color:white;border:0;padding:11px 14px;border-radius:10px;font-weight:bold}
+button.azul{background:#2563EB}
+input,select{width:100%;padding:11px;border:1px solid #BFDBFE;border-radius:10px;margin:6px 0}
+.prod{display:flex;justify-content:space-between;background:#F0F9FF;padding:12px;border-radius:10px;margin-top:8px}
+.baixo{background:#FEF2F2;border:1px solid #FECACA}
 </style>
 </head>
 <body>
-<h1>📦 Estoque Fácil</h1>
-<div class="card">
-<input id="nome" placeholder="Nome do produto ex: Arroz">
-<input id="qtd" type="number" placeholder="Quantidade">
-<input id="preco" type="number" placeholder="Preço R$">
-<button onclick="add()">+ ADICIONAR PRODUTO</button>
-</div>
-<input id="busca" placeholder="🔍 Pesquisar..." oninput="mostrar()">
-<div id="lista"></div>
+<header><h1>📦 Estoque Fácil</h1><p>Loja Fictícia - App escolar</p></header>
+<div class="card"><h2>➕ Cadastrar Produto</h2>
+<input id="nome" placeholder="Nome: Ex: Caderno">
+<input id="preco" type="number" step="0.01" placeholder="Preço: Ex: 20.00">
+<input id="qtd" type="number" placeholder="Quantidade: Ex: 10">
+<button onclick="add()">+ Cadastrar Produto</button></div>
+<div class="card"><h2>🛒 Simular Venda</h2>
+<select id="vendaProd"></select>
+<input id="vendaQtd" type="number" placeholder="Quantidade: Ex: 3">
+<button class="azul" onclick="vender()">Vender Agora</button><p id="msgVenda"></p></div>
+<div class="card"><h2>📋 Meus Produtos</h2>
+<input id="busca" placeholder="🔍 Pesquisar..." oninput="render()">
+<div id="lista"></div></div>
+<div class="card"><p>Total em estoque: <b id="totalEstoque">0</b> | Total vendas: <b id="totalVendas">R$ 0,00</b></p></div>
 <script>
-let dados=JSON.parse(localStorage.getItem('estoque')||'[]');
-function add(){
-let n=document.getElementById('nome').value;
-let q=document.getElementById('qtd').value;
-let p=document.getElementById('preco').value;
-if(!n||!q){alert('Preencha nome e quantidade');return}
-dados.push({n,q:Number(q),p:p||0});
-localStorage.setItem('estoque',JSON.stringify(dados));
-document.getElementById('nome').value='';document.getElementById('qtd').value='';document.getElementById('preco').value='';
-mostrar();
-}
-function del(i){dados.splice(i,1);localStorage.setItem('estoque',JSON.stringify(dados));mostrar()}
-function mostrar(){
-let b=(document.getElementById('busca').value||'').toLowerCase();
-let html='';
-dados.forEach((x,i)=>{
-if(!x.n.toLowerCase().includes(b))return;
-html+=`<div class="item"><div><b>${x.n}</b><br>Qtd: <span class="${x.q<=2?'baixo':''}">${x.q}</span> - R$ ${x.p}</div><button class="del" onclick="del(${i})">X</button></div>`;
-});
-document.getElementById('lista').innerHTML=html||'<p style="text-align:center">Nenhum produto ainda</p>';
-}
-mostrar();
+let produtos=JSON.parse(localStorage.getItem('estoque')||'[]');
+let vendas=parseFloat(localStorage.getItem('vendas')||'0');
+if(produtos.length===0){produtos=[{nome:'Caderno',preco:20,qtd:10},{nome:'Caneta Azul',preco:3.50,qtd:25}];salvar();}
+function salvar(){localStorage.setItem('estoque',JSON.stringify(produtos));localStorage.setItem('vendas',String(vendas));}
+function dinheiro(v){return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+function render(){let busca=document.getElementById('busca').value.toLowerCase();let l=document.getElementById('lista');l.innerHTML='';let sel=document.getElementById('vendaProd');sel.innerHTML='';let tot=0;produtos.forEach((p,i)=>{tot+=p.qtd;sel.innerHTML+=`<option value="${i}">${p.nome} - ${dinheiro(p.preco)} - Estoque: ${p.qtd}</option>`;if(!p.nome.toLowerCase().includes(busca))return;let baixo=p.qtd<5;l.innerHTML+=`<div class="prod ${baixo?'baixo':''}"><div><b>${p.nome}</b><br>${dinheiro(p.preco)} | Qtd: <b>${p.qtd}</b> ${baixo?'⚠️ ESTOQUE BAIXO':''}</div><div><button class="azul" onclick="editar(${i})">✏️</button> <button onclick="excluir(${i})" style="background:#DC2626">🗑️</button></div></div>`});document.getElementById('totalEstoque').innerText=tot;document.getElementById('totalVendas').innerText=dinheiro(vendas);}
+function add(){let n=document.getElementById('nome').value.trim();let pr=parseFloat(document.getElementById('preco').value);let q=parseInt(document.getElementById('qtd').value);if(!n||isNaN(pr)||isNaN(q)){alert('Preencha tudo!');return;}produtos.push({nome:n,preco:pr,qtd:q});document.getElementById('nome').value='';document.getElementById('preco').value='';document.getElementById('qtd').value='';salvar();render();}
+function excluir(i){if(confirm('Excluir '+produtos[i].nome+'?')){produtos.splice(i,1);salvar();render();}}
+function editar(i){let p=produtos[i];let n=prompt('Novo nome:',p.nome);if(n===null)return;let pr=prompt('Novo preço:',p.preco);if(pr===null)return;let q=prompt('Nova quantidade:',p.qtd);if(q===null)return;produtos[i]={nome:n,preco:parseFloat(pr)||p.preco,qtd:parseInt(q)||0};salvar();render();}
+function vender(){let i=parseInt(document.getElementById('vendaProd').value);let q=parseInt(document.getElementById('vendaQtd').value);if(isNaN(i)||isNaN(q)||q<=0){alert('Escolha produto e quantidade!');return;}let p=produtos[i];if(q>p.qtd){alert('Não pode vender! Você tem só '+p.qtd);return;}p.qtd-=q;let valor=q*p.preco;vendas+=valor;salvar();render();document.getElementById('msgVenda').innerHTML=`✅ Venda feita! ${q}x ${p.nome} = <b>${dinheiro(valor)}</b><br>Estoque agora: <b>${p.qtd}</b>`;document.getElementById('vendaQtd').value='';}
+render();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
 </script>
 </body>
 </html>
